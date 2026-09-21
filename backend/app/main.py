@@ -1,4 +1,8 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.routers import users, activities, participants, auth
+
 
 app = FastAPI(
     title="SquadUp API",
@@ -7,6 +11,36 @@ app = FastAPI(
 )
 
 
+# ============================================================
+# CORS CONFIGURATION
+# ============================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ============================================================
+# ROUTERS
+# ============================================================
+
+app.include_router(users.router)
+app.include_router(activities.router)
+app.include_router(participants.router)
+app.include_router(auth.router)
+
+
+# ============================================================
+# ROOT
+# ============================================================
+
 @app.get("/")
 def root():
     return {
@@ -14,6 +48,10 @@ def root():
         "status": "running"
     }
 
+
+# ============================================================
+# HEALTH CHECK
+# ============================================================
 
 @app.get("/api/v1/health")
 def health_check():

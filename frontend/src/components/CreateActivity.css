@@ -1,0 +1,234 @@
+.create-activity-page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  color: #171717;
+}
+
+.create-activity-container {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 40px 24px 70px;
+}
+
+.create-back-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 25px;
+
+  color: #555;
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.create-back-button:hover {
+  color: #ff6b35;
+}
+
+.create-activity-card {
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.create-activity-header {
+  padding: 35px 35px 30px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.create-activity-header p {
+  margin: 0 0 7px;
+
+  color: #ff6b35;
+  font-size: 12px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.create-activity-header h1 {
+  margin: 0 0 8px;
+
+  font-size: 32px;
+  letter-spacing: -0.5px;
+}
+
+.create-activity-header span {
+  color: #777;
+  font-size: 14px;
+}
+
+.create-activity-form {
+  padding: 30px 35px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.create-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.create-form-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+}
+
+.create-form-group input,
+.create-form-group select,
+.create-form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  border: 1px solid #dcdcdc;
+  border-radius: 9px;
+
+  background: white;
+
+  padding: 12px 13px;
+
+  font-family: inherit;
+  font-size: 14px;
+
+  outline: none;
+}
+
+.create-form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.create-form-group input:focus,
+.create-form-group select:focus,
+.create-form-group textarea:focus {
+  border-color: #ff6b35;
+  box-shadow:
+    0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.coordinates-section {
+  margin-top: 5px;
+  margin-bottom: 10px;
+
+  padding: 20px;
+
+  border: 1px dashed #d8d8d8;
+  border-radius: 12px;
+
+  background: #fafafa;
+}
+
+.coordinates-section h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+}
+
+.coordinates-section p {
+  margin: 0 0 20px;
+
+  color: #777;
+  font-size: 12px;
+}
+
+.coordinates-section .form-row {
+  margin-bottom: -20px;
+}
+
+.create-error {
+  margin: 10px 0 20px;
+
+  padding: 12px 14px;
+
+  border-radius: 9px;
+
+  background: #fff0f0;
+  color: #c0392b;
+
+  font-size: 13px;
+}
+
+.create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  margin-top: 25px;
+  padding-top: 25px;
+
+  border-top: 1px solid #eeeeee;
+}
+
+.cancel-button,
+.create-submit-button {
+  border-radius: 9px;
+
+  padding: 12px 20px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.cancel-button {
+  border: 1px solid #ddd;
+  background: white;
+  color: #555;
+}
+
+.cancel-button:hover {
+  background: #f5f5f5;
+}
+
+.create-submit-button {
+  border: none;
+  background: #ff6b35;
+  color: white;
+}
+
+.create-submit-button:hover {
+  background: #e95b29;
+}
+
+.cancel-button:disabled,
+.create-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 650px) {
+  .create-activity-container {
+    padding: 25px 16px 50px;
+  }
+
+  .create-activity-header,
+  .create-activity-form {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .create-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-button,
+  .create-submit-button {
+    width: 100%;
+  }
+}

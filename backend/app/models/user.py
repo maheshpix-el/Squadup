@@ -9,4 +9,7 @@ class User(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True, nullable=False, index=True)
     phone = Column(String(20), unique=True, nullable=True)
+
+    password_hash = Column(String(255), nullable=False)
+
     is_verified = Column(Boolean, default=False)

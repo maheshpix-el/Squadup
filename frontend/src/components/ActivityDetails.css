@@ -1,0 +1,327 @@
+.activity-details-page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  color: #171717;
+}
+
+.activity-details-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 70px;
+}
+
+.back-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 25px;
+
+  color: #555;
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.back-button:hover {
+  color: #ff6b35;
+}
+
+.activity-details-card {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.details-header {
+  padding: 28px 32px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-bottom: 1px solid #eeeeee;
+}
+
+.details-sport-icon {
+  width: 62px;
+  height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 16px;
+  background: #fff1eb;
+
+  font-size: 32px;
+}
+
+.details-status {
+  padding: 7px 13px;
+  border-radius: 999px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-transform: capitalize;
+}
+
+.details-status.open {
+  background: #e9f8ef;
+  color: #18864b;
+}
+
+.details-status.full {
+  background: #fff1e8;
+  color: #d85b21;
+}
+
+.details-status.closed {
+  background: #f1f1f1;
+  color: #777;
+}
+
+.details-main {
+  padding: 35px 32px;
+}
+
+.details-sport {
+  margin: 0 0 8px;
+
+  color: #ff6b35;
+  font-size: 13px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.details-main h1 {
+  margin: 0 0 15px;
+
+  font-size: 36px;
+  letter-spacing: -0.7px;
+}
+
+.details-description {
+  max-width: 650px;
+
+  margin: 0 0 30px;
+
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.details-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.details-info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 15px;
+
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+}
+
+.details-info-icon {
+  font-size: 20px;
+}
+
+.details-info-item small {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #888;
+  font-size: 11px;
+}
+
+.details-info-item strong {
+  display: block;
+
+  font-size: 13px;
+}
+
+.players-section {
+  padding: 28px 32px 32px;
+
+  background: #fafafa;
+  border-top: 1px solid #eeeeee;
+}
+
+.players-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+
+  margin-bottom: 15px;
+}
+
+.players-header h2 {
+  margin: 0 0 4px;
+  font-size: 21px;
+}
+
+.players-header p {
+  margin: 0;
+  color: #777;
+  font-size: 13px;
+}
+
+.players-header > strong {
+  color: #ff6b35;
+  font-size: 13px;
+}
+
+.players-progress {
+  width: 100%;
+  height: 10px;
+
+  background: #e7e7e7;
+  border-radius: 999px;
+
+  overflow: hidden;
+}
+
+.players-progress-fill {
+  height: 100%;
+  background: #ff6b35;
+  border-radius: 999px;
+
+  transition: width 0.3s ease;
+}
+
+.details-actions {
+  display: flex;
+  gap: 12px;
+
+  margin-top: 25px;
+}
+
+.action-button {
+  flex: 1;
+
+  border: none;
+  border-radius: 10px;
+
+  padding: 13px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.action-button.join {
+  background: #ff6b35;
+  color: white;
+}
+
+.action-button.join:hover {
+  background: #e95b29;
+}
+
+.action-button.leave {
+  background: white;
+  border: 1px solid #ddd;
+  color: #555;
+}
+
+.action-button.leave:hover {
+  border-color: #bbb;
+}
+
+.action-button.disabled {
+  background: #ddd;
+  color: #777;
+  cursor: not-allowed;
+}
+
+.action-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.action-message {
+  margin: 18px 0 0;
+
+  color: #555;
+  font-size: 14px;
+  text-align: center;
+}
+
+.creator-message {
+  margin-top: 20px;
+  padding: 13px;
+
+  background: #fff1eb;
+  border-radius: 10px;
+
+  color: #d85b21;
+  font-size: 14px;
+  font-weight: 600;
+
+  text-align: center;
+}
+
+.details-state {
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+
+  padding: 50px;
+
+  text-align: center;
+  color: #666;
+}
+
+.details-state.error h2 {
+  color: #171717;
+}
+
+.details-state button {
+  margin-top: 15px;
+
+  border: none;
+  background: #171717;
+  color: white;
+
+  padding: 11px 18px;
+  border-radius: 8px;
+
+  cursor: pointer;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .activity-details-container {
+    padding: 25px 16px 50px;
+  }
+
+  .details-header,
+  .details-main,
+  .players-section {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .details-main h1 {
+    font-size: 29px;
+  }
+
+  .details-info {
+    grid-template-columns: 1fr;
+  }
+
+  .details-actions {
+    flex-direction: column;
+  }
+}
