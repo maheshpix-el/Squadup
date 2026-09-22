@@ -8,21 +8,19 @@ import {
 import { useAuth } from "./context/AuthContext";
 
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ActivityDetails from "./pages/ActivityDetails";
 import CreateActivity from "./pages/CreateActivity";
+import MyActivities from "./pages/MyActivities";
+import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
+import NotFound from "./pages/NotFound";
 
 
-/*
- * Protected Route
- *
- * Only authenticated users can access
- * dashboard and activity pages.
- */
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
 
-  // While checking the stored token
   if (loading) {
     return (
       <div
@@ -40,7 +38,6 @@ function ProtectedRoute({ children }) {
     );
   }
 
-  // User is not logged in
   if (!isAuthenticated) {
     return (
       <Navigate
@@ -50,22 +47,51 @@ function ProtectedRoute({ children }) {
     );
   }
 
-  // User is authenticated
   return children;
 }
 
 
-/*
- * App
- */
+function PublicRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Arial, sans-serif",
+          color: "#555",
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    );
+  }
+
+  return children;
+}
+
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* =========================================
+        {/* ================================
             ROOT
-            ========================================= */}
+            ================================ */}
         <Route
           path="/"
           element={
@@ -77,18 +103,33 @@ function App() {
         />
 
 
-        {/* =========================================
-            LOGIN
-            ========================================= */}
+        {/* ================================
+            PUBLIC ROUTES
+            ================================ */}
+
         <Route
           path="/login"
-          element={<Login />}
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
         />
 
 
-        {/* =========================================
-            DASHBOARD
-            ========================================= */}
+        {/* ================================
+            PROTECTED ROUTES
+            ================================ */}
+
         <Route
           path="/dashboard"
           element={
@@ -98,23 +139,6 @@ function App() {
           }
         />
 
-
-        {/* =========================================
-            ACTIVITY DETAILS
-            ========================================= */}
-        <Route
-          path="/activities/:activityId"
-          element={
-            <ProtectedRoute>
-              <ActivityDetails />
-            </ProtectedRoute>
-          }
-        />
-
-
-        {/* =========================================
-            CREATE ACTIVITY
-            ========================================= */}
         <Route
           path="/activities/create"
           element={
@@ -124,18 +148,50 @@ function App() {
           }
         />
 
+        <Route
+          path="/activities/:activityId"
+          element={
+            <ProtectedRoute>
+              <ActivityDetails />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* =========================================
-            UNKNOWN ROUTES
-            ========================================= */}
+        <Route
+          path="/my-activities"
+          element={
+            <ProtectedRoute>
+              <MyActivities />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile/edit"
+          element={
+            <ProtectedRoute>
+              <EditProfile />
+            </ProtectedRoute>
+          }
+        />
+
+
+        {/* ================================
+            404
+            ================================ */}
+
         <Route
           path="*"
-          element={
-            <Navigate
-              to="/dashboard"
-              replace
-            />
-          }
+          element={<NotFound />}
         />
 
       </Routes>

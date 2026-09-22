@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { registerUser } from "../api/auth";
+
+import "../components/Register.css";
 
 function Register() {
   const navigate = useNavigate();
@@ -9,8 +11,8 @@ function Register() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
-    role: "candidate",
   });
 
   const [loading, setLoading] = useState(false);
@@ -32,17 +34,27 @@ function Register() {
     setError("");
     setSuccess("");
 
-    if (!formData.name.trim()) {
+    const name = formData.name.trim();
+    const email = formData.email.trim();
+    const phone = formData.phone.trim();
+    const password = formData.password;
+
+    if (!name) {
       setError("Please enter your name.");
       return;
     }
 
-    if (!formData.email.trim()) {
+    if (!email) {
       setError("Please enter your email.");
       return;
     }
 
-    if (formData.password.length < 8) {
+    if (phone && (phone.length < 10 || phone.length > 15)) {
+      setError("Phone number must contain 10 to 15 characters.");
+      return;
+    }
+
+    if (password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
     }
@@ -51,10 +63,10 @@ function Register() {
       setLoading(true);
 
       await registerUser({
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        password: formData.password,
-        role: formData.role,
+        name,
+        email,
+        phone: phone || null,
+        password,
       });
 
       setSuccess(
@@ -78,7 +90,7 @@ function Register() {
       } else {
         setError(
           detail ||
-          "Unable to register. Please try again."
+            "Unable to register. Please try again."
         );
       }
     } finally {
@@ -87,163 +99,133 @@ function Register() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f7f8fa",
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "430px",
-          background: "#fff",
-          border: "1px solid #e5e5e5",
-          borderRadius: "18px",
-          padding: "35px",
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: "30px" }}>
-          <h1 style={{ margin: 0 }}>
-            Join <span style={{ color: "#ff6b35" }}>SquadUp</span>
+    <div className="register-page">
+      <div className="register-card">
+
+        <div className="register-header">
+          <div className="register-brand">
+            <span className="register-brand-mark">
+              S
+            </span>
+
+            <span>SquadUp</span>
+          </div>
+
+          <h1>
+            Create your account
           </h1>
 
-          <p style={{ color: "#777" }}>
-            Create your account and find your squad.
+          <p>
+            Join players around you and find your squad.
           </p>
         </div>
 
         {error && (
-          <div
-            style={{
-              background: "#fff0f0",
-              color: "#c0392b",
-              padding: "12px",
-              borderRadius: "8px",
-              marginBottom: "18px",
-              fontSize: "14px",
-            }}
-          >
+          <div className="register-message register-error">
             {error}
           </div>
         )}
 
         {success && (
-          <div
-            style={{
-              background: "#eaf8ef",
-              color: "#18864b",
-              padding: "12px",
-              borderRadius: "8px",
-              marginBottom: "18px",
-              fontSize: "14px",
-            }}
-          >
+          <div className="register-message register-success">
             {success}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "18px" }}>
-            <label>Name</label>
+
+          <div className="register-form-group">
+            <label htmlFor="name">
+              Name
+            </label>
 
             <input
+              id="name"
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
               placeholder="Enter your name"
+              autoComplete="name"
               required
-              style={inputStyle}
             />
           </div>
 
-          <div style={{ marginBottom: "18px" }}>
-            <label>Email</label>
+          <div className="register-form-group">
+            <label htmlFor="email">
+              Email
+            </label>
 
             <input
+              id="email"
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="you@example.com"
+              autoComplete="email"
               required
-              style={inputStyle}
             />
           </div>
 
-          <div style={{ marginBottom: "18px" }}>
-            <label>Password</label>
+          <div className="register-form-group">
+            <label htmlFor="phone">
+              Phone
+              <span className="optional">
+                Optional
+              </span>
+            </label>
 
             <input
+              id="phone"
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter your phone number"
+              autoComplete="tel"
+            />
+          </div>
+
+          <div className="register-form-group">
+            <label htmlFor="password">
+              Password
+            </label>
+
+            <input
+              id="password"
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               placeholder="Minimum 8 characters"
+              autoComplete="new-password"
               required
-              style={inputStyle}
             />
           </div>
 
           <button
             type="submit"
+            className="register-submit-button"
             disabled={loading}
-            style={{
-              width: "100%",
-              padding: "13px",
-              border: "none",
-              borderRadius: "9px",
-              background: "#ff6b35",
-              color: "#fff",
-              fontWeight: "700",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
-            }}
           >
-            {loading ? "Creating account..." : "Create Account"}
+            {loading
+              ? "Creating account..."
+              : "Create Account"}
           </button>
         </form>
 
-        <p
-          style={{
-            textAlign: "center",
-            marginTop: "22px",
-            color: "#777",
-            fontSize: "14px",
-          }}
-        >
+        <p className="register-login-text">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            style={{
-              color: "#ff6b35",
-              fontWeight: "700",
-              textDecoration: "none",
-            }}
-          >
+
+          <Link to="/login">
             Login
           </Link>
         </p>
+
       </div>
     </div>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  boxSizing: "border-box",
-  marginTop: "7px",
-  padding: "12px 13px",
-  border: "1px solid #dcdcdc",
-  borderRadius: "9px",
-  fontSize: "14px",
-  outline: "none",
-};
 
 export default Register;
