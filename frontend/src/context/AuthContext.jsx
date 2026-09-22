@@ -37,6 +37,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateAuthenticatedUser = (updatedUser) => {
+    setUser(updatedUser);
+  };
+
   useEffect(() => {
     const loadUser = async () => {
       const storedToken =
@@ -77,6 +81,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         logout,
+        updateAuthenticatedUser,
       }}
     >
       {children}

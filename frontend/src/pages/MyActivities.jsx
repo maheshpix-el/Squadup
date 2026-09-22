@@ -6,7 +6,7 @@ import {
   getJoinedActivities,
 } from "../api/activities";
 
-import Navbar from "../components/useNavigate";
+import Navbar from "../components/Navbar";
 
 import "../components/MyActivities.css";
 

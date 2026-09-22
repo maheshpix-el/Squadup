@@ -6,7 +6,7 @@ import {
   getNearbyActivities,
 } from "../api/activities";
 
-import Navbar from "../components/useNavigate";
+import Navbar from "../components/Navbar";
 import ActivityCard from "../components/ActivityCard";
 
 import "../components/Dashboard.css";

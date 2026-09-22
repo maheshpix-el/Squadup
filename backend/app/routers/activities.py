@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import get_current_user
 from app.database import get_db
 from app.models.activity import Activity
+from app.models.participant import Participant
 from app.models.user import User
 from app.schemas.activity import (
     ActivityCreate,
@@ -178,7 +179,7 @@ def update_activity(
 ):
     activity = db.query(Activity).filter(
         Activity.id == activity_id
-    ).first()
+    ).with_for_update().first()
 
     if not activity:
         raise HTTPException(
@@ -197,8 +198,29 @@ def update_activity(
         exclude_unset=True
     )
 
+    if "max_players" in update_data:
+        current_players = db.query(Participant).filter(
+            Participant.activity_id == activity_id
+        ).count() + 1
+
+        if update_data["max_players"] < current_players:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "Maximum players cannot be lower than the "
+                    "current squad size"
+                )
+            )
+
     for field, value in update_data.items():
         setattr(activity, field, value)
+
+    if "max_players" in update_data:
+        activity.status = (
+            "full"
+            if current_players >= activity.max_players
+            else "open"
+        )
 
     db.commit()
     db.refresh(activity)
@@ -221,7 +243,7 @@ def delete_activity(
 ):
     activity = db.query(Activity).filter(
         Activity.id == activity_id
-    ).first()
+    ).with_for_update().first()
 
     if not activity:
         raise HTTPException(
@@ -235,6 +257,10 @@ def delete_activity(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not allowed to delete this activity"
         )
+
+    db.query(Participant).filter(
+        Participant.activity_id == activity_id
+    ).delete(synchronize_session=False)
 
     db.delete(activity)
     db.commit()

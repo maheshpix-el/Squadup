@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { createActivity } from "../api/activities";
-import Navbar from "../components/useNavigate";
+import Navbar from "../components/Navbar";
 
 import "../components/CreateActivity.css";
 

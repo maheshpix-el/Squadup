@@ -14,7 +14,7 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 
-import Navbar from "../components/useNavigate";
+import Navbar from "../components/Navbar";
 
 import "../components/ActivityDetails.css";
 

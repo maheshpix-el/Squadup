@@ -1,5 +1,5 @@
 from app.database import engine, Base
-from app.models import User
+from app.models import Activity, Participant, User
 
 print("Creating database tables...")
 

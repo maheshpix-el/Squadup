@@ -11,7 +11,7 @@ class Participant(Base):
 
     activity_id = Column(
         Integer,
-        ForeignKey("activities.id"),
+        ForeignKey("activities.id", ondelete="CASCADE"),
         nullable=False
     )
 

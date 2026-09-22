@@ -34,7 +34,7 @@ def join_activity(
     # Check activity
     activity = db.query(Activity).filter(
         Activity.id == activity_id
-    ).first()
+    ).with_for_update().first()
 
     if not activity:
         raise HTTPException(
@@ -82,13 +82,15 @@ def join_activity(
             detail="You have already joined this activity"
         )
 
-    # Count participants
+    # The creator is always part of the squad, even though they do not
+    # receive a participant record.
     participant_count = db.query(Participant).filter(
         Participant.activity_id == activity_id
     ).count()
+    current_players = participant_count + 1
 
     # Check capacity
-    if participant_count >= activity.max_players:
+    if current_players >= activity.max_players:
         activity.status = "full"
         db.commit()
 
@@ -106,10 +108,10 @@ def join_activity(
     db.add(new_participant)
 
     # New count after joining
-    new_participant_count = participant_count + 1
+    new_player_count = current_players + 1
 
     # Automatically mark activity as full
-    if new_participant_count >= activity.max_players:
+    if new_player_count >= activity.max_players:
         activity.status = "full"
 
     db.commit()
@@ -134,7 +136,7 @@ def leave_activity(
     # Check activity
     activity = db.query(Activity).filter(
         Activity.id == activity_id
-    ).first()
+    ).with_for_update().first()
 
     if not activity:
         raise HTTPException(
@@ -217,29 +219,27 @@ def get_participant_count(
             detail="Activity not found"
         )
 
-    # Count participants
+    # The creator is part of every squad but is not stored as a participant.
     participant_count = db.query(Participant).filter(
         Participant.activity_id == activity_id
     ).count()
+    current_players = participant_count + 1
 
     available_slots = max(
-        activity.max_players - participant_count,
+        activity.max_players - current_players,
         0
     )
 
-    # Keep status synchronized
-    if participant_count >= activity.max_players:
-        if activity.status == "open":
-            activity.status = "full"
-            db.commit()
-    elif activity.status == "full":
-        activity.status = "open"
-        db.commit()
+    current_status = (
+        "full"
+        if current_players >= activity.max_players
+        else activity.status
+    )
 
     return {
         "activity_id": activity_id,
-        "current_players": participant_count,
+        "current_players": current_players,
         "max_players": activity.max_players,
         "available_slots": available_slots,
-        "status": activity.status
+        "status": current_status
     }

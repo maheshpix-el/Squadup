@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
-import api from "../api/axios";
+import { updateMyProfile } from "../api/users";
 
 function EditProfile() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateAuthenticatedUser } = useAuth();
 
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
@@ -32,10 +32,12 @@ function EditProfile() {
     try {
       setSaving(true);
 
-      await api.put("/users/me", {
+      const updatedUser = await updateMyProfile({
         name: name.trim(),
         phone: phone.trim() || null,
       });
+
+      updateAuthenticatedUser(updatedUser);
 
       navigate("/profile");
     } catch (err) {
