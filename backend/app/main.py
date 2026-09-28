@@ -1,3 +1,4 @@
+from app.database import Base, engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,7 +10,7 @@ app = FastAPI(
     description="Backend API for the SquadUp sports activity platform",
     version="1.0.0"
 )
-
+Base.metadata.create_all(bind=engine)
 
 # ============================================================
 # CORS CONFIGURATION
