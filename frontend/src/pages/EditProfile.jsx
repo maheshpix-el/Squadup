@@ -5,6 +5,9 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { updateMyProfile } from "../api/users";
 
+import "./EditProfile.css";
+
+
 function EditProfile() {
   const navigate = useNavigate();
   const { user, updateAuthenticatedUser } = useAuth();
@@ -54,77 +57,233 @@ function EditProfile() {
     <>
       <Navbar />
 
-      <main className="profile-page">
-        <div className="profile-card">
-          <div className="profile-header">
-            <div>
-              <h1>Edit Profile</h1>
-              <p>Update your SquadUp profile information.</p>
+      <main className="edit-profile-page">
+        <div className="edit-profile-container">
+
+          {/* =================================================
+              Page Header
+              ================================================= */}
+
+          <section className="edit-profile-hero">
+            <button
+              type="button"
+              className="back-profile-button"
+              onClick={() => navigate("/profile")}
+            >
+              <span aria-hidden="true">←</span>
+              Back to Profile
+            </button>
+
+            <p className="edit-profile-eyebrow">
+              ACCOUNT SETTINGS
+            </p>
+
+            <h1>
+              Edit your <span>Profile</span>
+            </h1>
+
+            <p className="edit-profile-subtitle">
+              Keep your SquadUp information up to date.
+            </p>
+          </section>
+
+
+          {/* =================================================
+              Edit Profile Card
+              ================================================= */}
+
+          <section className="edit-profile-card">
+
+            {/* Card Header */}
+
+            <div className="edit-profile-card-header">
+
+              <div className="edit-profile-avatar">
+                {(user?.name || "P")
+                  .charAt(0)
+                  .toUpperCase()}
+              </div>
+
+              <div>
+                <h2>
+                  Profile Information
+                </h2>
+
+                <p>
+                  Update the details associated with your account.
+                </p>
+              </div>
+
             </div>
-          </div>
 
-          {error && (
-            <div className="profile-error">
-              {error}
-            </div>
-          )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="profile-form-field">
-              <label htmlFor="name">Name</label>
+            <div className="edit-profile-divider" />
 
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Enter your name"
-              />
-            </div>
 
-            <div className="profile-form-field">
-              <label htmlFor="email">Email</label>
+            {/* Error */}
 
-              <input
-                id="email"
-                type="email"
-                value={user?.email || ""}
-                disabled
-              />
-            </div>
-
-            <div className="profile-form-field">
-              <label htmlFor="phone">Phone</label>
-
-              <input
-                id="phone"
-                type="tel"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                placeholder="Enter your phone number"
-              />
-            </div>
-
-            <div className="profile-actions">
-              <button
-                type="button"
-                onClick={() => navigate("/profile")}
+            {error && (
+              <div
+                className="edit-profile-error"
+                role="alert"
               >
-                Cancel
-              </button>
+                <span
+                  className="edit-profile-error-icon"
+                  aria-hidden="true"
+                >
+                  !
+                </span>
 
-              <button
-                type="submit"
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          </form>
+                <div>
+                  <strong>
+                    Unable to save changes
+                  </strong>
+
+                  <p>{error}</p>
+                </div>
+              </div>
+            )}
+
+
+            {/* Form */}
+
+            <form
+              className="edit-profile-form"
+              onSubmit={handleSubmit}
+            >
+
+              {/* Name */}
+
+              <div className="edit-profile-field">
+                <label htmlFor="name">
+                  Name
+                </label>
+
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                    setError("");
+                  }}
+                  placeholder="Enter your name"
+                  autoComplete="name"
+                  disabled={saving}
+                />
+
+                <span className="edit-profile-help">
+                  This name will be displayed on your SquadUp profile.
+                </span>
+              </div>
+
+
+              {/* Email */}
+
+              <div className="edit-profile-field">
+                <label htmlFor="email">
+                  Email
+                </label>
+
+                <div className="edit-profile-input-wrapper">
+                  <input
+                    id="email"
+                    type="email"
+                    value={user?.email || ""}
+                    disabled
+                  />
+
+                  <span className="edit-profile-locked">
+                    Locked
+                  </span>
+                </div>
+
+                <span className="edit-profile-help">
+                  Email changes are currently unavailable.
+                </span>
+              </div>
+
+
+              {/* Phone */}
+
+              <div className="edit-profile-field">
+                <label htmlFor="phone">
+                  Phone
+                  <span className="optional-label">
+                    Optional
+                  </span>
+                </label>
+
+                <input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(event) => {
+                    setPhone(event.target.value);
+                    setError("");
+                  }}
+                  placeholder="Enter your phone number"
+                  autoComplete="tel"
+                  disabled={saving}
+                />
+
+                <span className="edit-profile-help">
+                  Use 10 to 15 characters for your phone number.
+                </span>
+              </div>
+
+
+              {/* Actions */}
+
+              <div className="edit-profile-actions">
+
+                <button
+                  type="button"
+                  className="edit-profile-cancel"
+                  onClick={() => navigate("/profile")}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="edit-profile-save"
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <>
+                      <span
+                        className="edit-profile-spinner"
+                        aria-hidden="true"
+                      />
+
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      Save Changes
+                      <span
+                        className="save-arrow"
+                        aria-hidden="true"
+                      >
+                        →
+                      </span>
+                    </>
+                  )}
+                </button>
+
+              </div>
+
+            </form>
+
+          </section>
+
         </div>
       </main>
     </>
   );
 }
+
 
 export default EditProfile;

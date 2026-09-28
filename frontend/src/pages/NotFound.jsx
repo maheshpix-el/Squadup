@@ -1,73 +1,55 @@
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+
+import "./NotFound.css";
 
 function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-        background: "#fafafa",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          textAlign: "center",
-          maxWidth: "500px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "72px",
-            fontWeight: "800",
-            color: "#ff6b35",
-            lineHeight: 1,
-            marginBottom: "16px",
-          }}
-        >
-          404
-        </div>
+    <div className="not-found-page">
+      <Navbar />
 
-        <h1
-          style={{
-            margin: "0 0 10px",
-            color: "#171717",
-          }}
-        >
-          Page Not Found
-        </h1>
+      <main className="not-found-container">
+        <section className="not-found-card">
+          <div className="not-found-code">404</div>
 
-        <p
-          style={{
-            margin: "0 0 24px",
-            color: "#666",
-          }}
-        >
-          The page you're looking for doesn't exist.
-        </p>
+          <div className="not-found-content">
+            <p className="not-found-eyebrow">
+              PAGE NOT FOUND
+            </p>
 
-        <button
-          type="button"
-          onClick={() => navigate("/dashboard")}
-          style={{
-            border: "none",
-            borderRadius: "8px",
-            padding: "11px 18px",
-            background: "#ff6b35",
-            color: "#fff",
-            fontWeight: "700",
-            cursor: "pointer",
-          }}
-        >
-          Go to Dashboard
-        </button>
-      </div>
-    </main>
+            <h1>
+              Looks like this page
+              <span> left the squad.</span>
+            </h1>
+
+            <p className="not-found-description">
+              The page you're looking for doesn't exist or may
+              have been moved. Let's get you back to the action.
+            </p>
+
+            <div className="not-found-actions">
+              <button
+                type="button"
+                className="not-found-primary"
+                onClick={() => navigate("/dashboard")}
+              >
+                Back to Discover
+              </button>
+
+              <button
+                type="button"
+                className="not-found-secondary"
+                onClick={() => navigate(-1)}
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }
 
