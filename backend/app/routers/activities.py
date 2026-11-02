@@ -2,6 +2,7 @@ from datetime import datetime
 from math import radians, sin, cos, sqrt, atan2
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user
@@ -9,6 +10,7 @@ from app.database import get_db
 from app.models.activity import Activity
 from app.models.participant import Participant
 from app.models.user import User
+from app.services import activity_counts, activity_status, participant_count
 from app.schemas.activity import (
     ActivityCreate,
     ActivityUpdate,
@@ -20,6 +22,57 @@ router = APIRouter(
     prefix="/api/v1/activities",
     tags=["Activities"]
 )
+
+
+# ============================================================
+# EXPIRED ACTIVITY CLEANUP
+# ============================================================
+
+def _activity_response_data(
+    activity,
+    participant_count
+):
+    counts = activity_counts(activity, participant_count)
+
+    return {
+        "id": activity.id,
+        "title": activity.title,
+        "sport": activity.sport,
+        "description": activity.description,
+        "location": activity.location,
+        "latitude": activity.latitude,
+        "longitude": activity.longitude,
+        "activity_date": activity.activity_date,
+        "max_players": activity.max_players,
+        "current_players": counts["current_players"],
+        "available_slots": counts["available_slots"],
+        "created_by": activity.created_by,
+        "status": counts["status"],
+        "created_at": activity.created_at
+    }
+
+
+def _get_activity_with_count(
+    db,
+    activity_id
+):
+    result = (
+        db.query(
+            Activity,
+            func.count(Participant.id)
+        )
+        .outerjoin(
+            Participant,
+            Participant.activity_id == Activity.id
+        )
+        .filter(
+            Activity.id == activity_id
+        )
+        .group_by(Activity.id)
+        .first()
+    )
+
+    return result
 
 
 # ============================================================
@@ -52,7 +105,10 @@ def create_activity(
     db.commit()
     db.refresh(new_activity)
 
-    return new_activity
+    return _activity_response_data(
+        new_activity,
+        0
+    )
 
 
 # ============================================================
@@ -72,26 +128,57 @@ def get_activities(
     ),
     db: Session = Depends(get_db)
 ):
-    query = db.query(Activity)
+    query = (
+        db.query(
+            Activity,
+            func.count(Participant.id)
+        )
+        .outerjoin(
+            Participant,
+            Participant.activity_id == Activity.id
+        )
+    )
+    query = query.filter(
+        Activity.activity_date >= datetime.now(),
+        Activity.status != "cancelled",
+    )
 
     if sport:
         query = query.filter(
-            Activity.sport.ilike(f"%{sport}%")
+            Activity.sport.ilike(
+                f"%{sport}%"
+            )
         )
 
     if location:
         query = query.filter(
-            Activity.location.ilike(f"%{location}%")
+            Activity.location.ilike(
+                f"%{location}%"
+            )
         )
 
+    results = (
+        query
+        .group_by(Activity.id)
+        .order_by(
+            Activity.activity_date.asc()
+        )
+        .all()
+    )
+
+    activities = [
+        _activity_response_data(
+            activity,
+            participant_count
+        )
+        for activity, participant_count in results
+    ]
     if status_filter:
-        query = query.filter(
-            Activity.status == status_filter
-        )
-
-    return query.order_by(
-        Activity.activity_date.asc()
-    ).all()
+        normalized = status_filter.lower()
+        if normalized not in {"open", "full"}:
+            raise HTTPException(status_code=400, detail="Discovery status must be open or full")
+        activities = [activity for activity in activities if activity["status"] == normalized]
+    return activities
 
 
 # ============================================================
@@ -120,18 +207,31 @@ def get_nearby_activities(
     ),
     db: Session = Depends(get_db)
 ):
-    activities = db.query(Activity).filter(
-        Activity.latitude.isnot(None),
-        Activity.longitude.isnot(None),
-        Activity.activity_date >= datetime.now()
-    ).all()
+    results = (
+        db.query(
+            Activity,
+            func.count(Participant.id)
+        )
+        .outerjoin(
+            Participant,
+            Participant.activity_id == Activity.id
+        )
+        .filter(
+            Activity.latitude.isnot(None),
+            Activity.longitude.isnot(None),
+            Activity.activity_date >= datetime.now(),
+            Activity.status != "cancelled",
+        )
+        .group_by(Activity.id)
+        .all()
+    )
 
     nearby_activities = []
 
     lat1 = radians(latitude)
     lon1 = radians(longitude)
 
-    for activity in activities:
+    for activity, participant_count in results:
 
         lat2 = radians(activity.latitude)
         lon2 = radians(activity.longitude)
@@ -154,13 +254,26 @@ def get_nearby_activities(
         distance_km = 6371 * c
 
         if distance_km <= radius_km:
-            nearby_activities.append(activity)
+            nearby_activities.append(
+                (
+                    activity,
+                    participant_count
+                )
+            )
 
     nearby_activities.sort(
-        key=lambda activity: activity.activity_date
+        key=lambda item:
+        item[0].activity_date
     )
 
-    return nearby_activities
+    return [
+        _activity_response_data(
+            activity,
+            participant_count
+        )
+        for activity, participant_count
+        in nearby_activities
+    ]
 
 
 # ============================================================
@@ -177,9 +290,14 @@ def update_activity(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    activity = db.query(Activity).filter(
-        Activity.id == activity_id
-    ).with_for_update().first()
+    activity = (
+        db.query(Activity)
+        .filter(
+            Activity.id == activity_id
+        )
+        .with_for_update()
+        .first()
+    )
 
     if not activity:
         raise HTTPException(
@@ -187,63 +305,90 @@ def update_activity(
             detail="Activity not found"
         )
 
-    # Only the creator can modify the activity
+    # Only the creator can modify the activity.
     if activity.created_by != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not allowed to modify this activity"
+            detail=(
+                "You are not allowed to modify "
+                "this activity"
+            )
         )
 
     update_data = activity_data.model_dump(
         exclude_unset=True
     )
 
-    if "max_players" in update_data:
-        current_players = db.query(Participant).filter(
-            Participant.activity_id == activity_id
-        ).count() + 1
+    current_status = activity_status(
+        activity,
+        participant_count(db, activity_id),
+    )
+    if current_status in {"completed", "cancelled"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Completed or cancelled activities cannot be updated",
+        )
 
-        if update_data["max_players"] < current_players:
+    current_players = (
+        db.query(Participant)
+        .filter(
+            Participant.activity_id == activity_id
+        )
+        .count()
+        + 1
+    )
+
+    if "max_players" in update_data:
+        if (
+            update_data["max_players"]
+            < current_players
+        ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
-                    "Maximum players cannot be lower than the "
-                    "current squad size"
+                    "Maximum players cannot be "
+                    "lower than the current "
+                    "squad size"
                 )
             )
 
     for field, value in update_data.items():
-        setattr(activity, field, value)
-
-    if "max_players" in update_data:
-        activity.status = (
-            "full"
-            if current_players >= activity.max_players
-            else "open"
+        setattr(
+            activity,
+            field,
+            value
         )
 
     db.commit()
     db.refresh(activity)
 
-    return activity
+    return _activity_response_data(
+        activity,
+        current_players - 1
+    )
 
 
 # ============================================================
-# DELETE ACTIVITY
+# CANCEL ACTIVITY
 # ============================================================
 
 @router.delete(
     "/{activity_id}",
-    status_code=status.HTTP_204_NO_CONTENT
+    response_model=ActivityResponse
 )
 def delete_activity(
     activity_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    activity = db.query(Activity).filter(
-        Activity.id == activity_id
-    ).with_for_update().first()
+    activity = (
+        db.query(Activity)
+        .filter(
+            Activity.id == activity_id
+        )
+        .with_for_update()
+        .first()
+    )
 
     if not activity:
         raise HTTPException(
@@ -251,21 +396,46 @@ def delete_activity(
             detail="Activity not found"
         )
 
-    # Only the creator can delete the activity
+    # Only the creator can delete the activity.
     if activity.created_by != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not allowed to delete this activity"
+            detail=(
+                "You are not allowed to delete "
+                "this activity"
+            )
         )
 
-    db.query(Participant).filter(
-        Participant.activity_id == activity_id
-    ).delete(synchronize_session=False)
-
-    db.delete(activity)
+    if activity.status == "cancelled":
+        raise HTTPException(status_code=400, detail="Activity is already cancelled")
+    if activity_status(activity, participant_count(db, activity_id)) == "completed":
+        raise HTTPException(status_code=400, detail="Completed activities cannot be cancelled")
+    activity.status = "cancelled"
     db.commit()
+    db.refresh(activity)
+    return _activity_response_data(activity, participant_count(db, activity_id))
 
-    return None
+
+@router.post("/{activity_id}/cancel", response_model=ActivityResponse)
+def cancel_activity(
+    activity_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    activity = db.query(Activity).filter(Activity.id == activity_id).with_for_update().first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    if activity.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the creator can cancel this activity")
+    if activity.status == "cancelled":
+        raise HTTPException(status_code=400, detail="Activity is already cancelled")
+    current_status = activity_status(activity, participant_count(db, activity_id))
+    if current_status == "completed":
+        raise HTTPException(status_code=400, detail="Completed activities cannot be cancelled")
+    activity.status = "cancelled"
+    db.commit()
+    db.refresh(activity)
+    return _activity_response_data(activity, participant_count(db, activity_id))
 
 
 # ============================================================
@@ -280,14 +450,20 @@ def get_activity(
     activity_id: int,
     db: Session = Depends(get_db)
 ):
-    activity = db.query(Activity).filter(
-        Activity.id == activity_id
-    ).first()
+    result = _get_activity_with_count(
+        db,
+        activity_id
+    )
 
-    if not activity:
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Activity not found"
         )
 
-    return activity
+    activity, participant_count = result
+
+    return _activity_response_data(
+        activity,
+        participant_count
+    )

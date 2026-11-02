@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -8,6 +8,7 @@ from app.database import get_db
 from app.models.activity import Activity
 from app.models.participant import Participant
 from app.models.user import User
+from app.services import activity_status, participant_count
 from app.schemas.participant import ParticipantResponse
 
 
@@ -43,26 +44,17 @@ def join_activity(
         )
 
     # Check activity status
-    if activity.status != "open":
+    current_status = activity_status(activity, participant_count(db, activity_id))
+    if current_status != "open":
+        detail = "Activity is cancelled" if current_status == "cancelled" else \
+            "Activity is already completed" if current_status == "completed" else \
+            "Activity is full"
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Activity is not open for joining"
+            status_code=status.HTTP_409_CONFLICT,
+            detail=detail
         )
 
     # Check whether activity has already started
-    activity_datetime = activity.activity_date
-
-    if activity_datetime.tzinfo is None:
-        current_time = datetime.now()
-    else:
-        current_time = datetime.now(timezone.utc)
-
-    if activity_datetime <= current_time:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This activity has already started or expired"
-        )
-
     # Creator does not need to join themselves
     if activity.created_by == current_user.id:
         raise HTTPException(
@@ -84,16 +76,13 @@ def join_activity(
 
     # The creator is always part of the squad, even though they do not
     # receive a participant record.
-    participant_count = db.query(Participant).filter(
+    existing_count = db.query(Participant).filter(
         Participant.activity_id == activity_id
     ).count()
-    current_players = participant_count + 1
+    current_players = existing_count + 1
 
     # Check capacity
     if current_players >= activity.max_players:
-        activity.status = "full"
-        db.commit()
-
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Activity is full"
@@ -106,13 +95,6 @@ def join_activity(
     )
 
     db.add(new_participant)
-
-    # New count after joining
-    new_player_count = current_players + 1
-
-    # Automatically mark activity as full
-    if new_player_count >= activity.max_players:
-        activity.status = "full"
 
     db.commit()
     db.refresh(new_participant)
@@ -156,12 +138,10 @@ def leave_activity(
             detail="You are not a participant of this activity"
         )
 
+    current_status = activity_status(activity, participant_count(db, activity_id))
+    if current_status in {"completed", "cancelled"}:
+        raise HTTPException(status_code=400, detail="Historical activities cannot be changed")
     db.delete(participant)
-
-    # If the activity was full, reopen it after someone leaves
-    if activity.status == "full":
-        activity.status = "open"
-
     db.commit()
 
     return None
@@ -220,21 +200,17 @@ def get_participant_count(
         )
 
     # The creator is part of every squad but is not stored as a participant.
-    participant_count = db.query(Participant).filter(
+    counted_participants = db.query(Participant).filter(
         Participant.activity_id == activity_id
     ).count()
-    current_players = participant_count + 1
+    current_players = counted_participants + 1
 
     available_slots = max(
         activity.max_players - current_players,
         0
     )
 
-    current_status = (
-        "full"
-        if current_players >= activity.max_players
-        else activity.status
-    )
+    current_status = activity_status(activity, current_players - 1)
 
     return {
         "activity_id": activity_id,

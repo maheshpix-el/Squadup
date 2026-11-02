@@ -1,6 +1,8 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from datetime import datetime, timezone
+
+from pydantic import BaseModel, Field, field_validator
 
 
 # ============================================================
@@ -43,6 +45,13 @@ class ActivityCreate(BaseModel):
         ge=2,
         le=100
     )
+
+    @field_validator("activity_date")
+    @classmethod
+    def normalize_activity_date(cls, value: datetime) -> datetime:
+        if value.tzinfo is not None:
+            return value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value
 
 
 # ============================================================
@@ -90,6 +99,13 @@ class ActivityUpdate(BaseModel):
         le=100
     )
 
+    @field_validator("activity_date")
+    @classmethod
+    def normalize_activity_date(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.tzinfo is not None:
+            return value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value
+
 
 # ============================================================
 # ACTIVITY RESPONSE
@@ -113,6 +129,10 @@ class ActivityResponse(BaseModel):
     activity_date: datetime
 
     max_players: int
+
+    current_players: int
+
+    available_slots: int
 
     created_by: int
 

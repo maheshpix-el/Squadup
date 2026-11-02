@@ -1,14 +1,11 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useState,
 } from "react";
 
 import { loginUser } from "../api/auth";
 import api from "../api/axios";
-
-const AuthContext = createContext(null);
+import { AuthContext } from "./authContextValue";
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(
@@ -87,16 +84,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error(
-      "useAuth must be used inside AuthProvider"
-    );
-  }
-
-  return context;
 };

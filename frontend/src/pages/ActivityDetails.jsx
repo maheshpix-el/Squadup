@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import {
   getActivity,
+  cancelActivity,
 } from "../api/activities";
 
 import {
@@ -12,7 +13,7 @@ import {
   leaveActivity,
 } from "../api/participants";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 
 import Navbar from "../components/Navbar";
 
@@ -35,15 +36,14 @@ function ActivityDetails() {
   const [error, setError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
 
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
 
   /*
    * Load activity and participant information
    */
   const loadActivity = useCallback(async () => {
     try {
-      setLoading(true);
-      setError("");
-
       const [
         activityData,
         countData,
@@ -54,6 +54,7 @@ function ActivityDetails() {
         getActivityParticipants(activityId),
       ]);
 
+      setError("");
       setActivity(activityData);
       setParticipantData(countData);
       setParticipants(participantsData);
@@ -79,7 +80,8 @@ function ActivityDetails() {
    * Initial load
    */
   useEffect(() => {
-    loadActivity();
+    const request = window.setTimeout(loadActivity, 0);
+    return () => window.clearTimeout(request);
   }, [loadActivity]);
 
 
@@ -97,6 +99,7 @@ function ActivityDetails() {
         "You joined this squad successfully!"
       );
 
+      setLoading(true);
       await loadActivity();
 
     } catch (error) {
@@ -130,6 +133,7 @@ function ActivityDetails() {
         "You left the squad."
       );
 
+      setLoading(true);
       await loadActivity();
 
     } catch (error) {
@@ -145,6 +149,47 @@ function ActivityDetails() {
 
     } finally {
       setActionLoading(false);
+    }
+  };
+
+
+  /*
+   * Delete activity
+   *
+   * Only the creator can reach this button.
+   * The backend also verifies ownership.
+   */
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "Cancel this activity?\n\nThe activity and its participant history will be preserved."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(true);
+      setActionMessage("");
+      setError("");
+
+      await cancelActivity(activityId);
+      setActionMessage("Activity cancelled successfully.");
+      setLoading(true);
+      await loadActivity();
+
+    } catch (error) {
+      console.error(
+        "Failed to delete activity:",
+        error
+      );
+
+      setActionMessage(
+        error.response?.data?.detail ||
+        "Unable to delete this activity."
+      );
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -505,8 +550,23 @@ function ActivityDetails() {
 
                 {isCreator ? (
 
-                  <div className="creator-message">
-                    You created this activity.
+                  <div className="creator-actions">
+
+                    <div className="creator-message">
+                      You created this activity.
+                    </div>
+
+                    <button
+                      type="button"
+                      className="action-button delete"
+                      onClick={handleDelete}
+                      disabled={deleteLoading}
+                    >
+                      {deleteLoading
+                        ? "Deleting..."
+                        : "Cancel Activity"}
+                    </button>
+
                   </div>
 
                 ) : isJoined ? (

@@ -44,3 +44,29 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserProfileBase(BaseModel):
+    username: str = Field(min_length=3, max_length=30, pattern=r"^[A-Za-z0-9_.-]+$")
+    bio: str | None = Field(default=None, max_length=500)
+    preferred_radius: int | None = Field(default=None, ge=1, le=15)
+    preferred_play_time: str | None = Field(default=None, max_length=50)
+
+
+class UserProfileCreate(UserProfileBase):
+    pass
+
+
+class UserProfileUpdate(BaseModel):
+    username: str | None = Field(default=None, min_length=3, max_length=30, pattern=r"^[A-Za-z0-9_.-]+$")
+    bio: str | None = Field(default=None, max_length=500)
+    preferred_radius: int | None = Field(default=None, ge=1, le=15)
+    preferred_play_time: str | None = Field(default=None, max_length=50)
+
+
+class UserProfileResponse(UserProfileBase):
+    id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True

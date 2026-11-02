@@ -32,6 +32,11 @@ function ActivityCard({ activity }) {
   const currentPlayers = Number(activity.current_players || 0);
   const maxPlayers = Number(activity.max_players || 0);
 
+  const availableSlots =
+    activity.available_slots !== undefined
+      ? Number(activity.available_slots)
+      : Math.max(maxPlayers - currentPlayers, 0);
+
   const playerPercentage =
     maxPlayers > 0
       ? Math.min((currentPlayers / maxPlayers) * 100, 100)
@@ -39,7 +44,7 @@ function ActivityCard({ activity }) {
 
   const isFull =
     activityStatus.toLowerCase() === "full" ||
-    (maxPlayers > 0 && currentPlayers >= maxPlayers);
+    availableSlots <= 0;
 
   const displayStatus = isFull ? "Full" : activityStatus;
 
@@ -119,6 +124,14 @@ function ActivityCard({ activity }) {
                   />
                 </div>
               )}
+
+              <span className="activity-available-slots">
+                {isFull
+                  ? "No spots left"
+                  : `${availableSlots} ${
+                      availableSlots === 1 ? "spot" : "spots"
+                    } left`}
+              </span>
             </dd>
           </div>
 

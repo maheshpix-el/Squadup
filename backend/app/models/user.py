@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 
@@ -13,3 +14,10 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
 
     is_verified = Column(Boolean, default=False)
+
+    profile = relationship(
+        "UserProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

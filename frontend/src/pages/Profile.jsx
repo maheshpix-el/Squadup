@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
+import { getMyDetailProfile } from "../api/users";
 
 import "./Profile.css";
 
@@ -8,6 +10,21 @@ import "./Profile.css";
 function Profile() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    getMyDetailProfile()
+      .then((data) => {
+        if (active) setProfile(data);
+      })
+      .catch(() => {
+        if (active) setProfile(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const userName = user?.name || "Player";
   const firstLetter = userName.charAt(0).toUpperCase();
@@ -163,6 +180,34 @@ function Profile() {
                       ? "Verified"
                       : "Not verified"}
                   </strong>
+                </div>
+
+                <div className="profile-field">
+                  <span className="profile-field-label">Username</span>
+                  <div className="profile-field-value">
+                    <strong>{profile?.username || "Not set"}</strong>
+                  </div>
+                </div>
+
+                <div className="profile-field">
+                  <span className="profile-field-label">Bio</span>
+                  <div className="profile-field-value">
+                    <strong>{profile?.bio || "Not added"}</strong>
+                  </div>
+                </div>
+
+                <div className="profile-field">
+                  <span className="profile-field-label">Preferred radius</span>
+                  <div className="profile-field-value">
+                    <strong>{profile?.preferred_radius ? `${profile.preferred_radius} km` : "Not set"}</strong>
+                  </div>
+                </div>
+
+                <div className="profile-field">
+                  <span className="profile-field-label">Preferred play time</span>
+                  <div className="profile-field-value">
+                    <strong>{profile?.preferred_play_time || "Not set"}</strong>
+                  </div>
                 </div>
               </div>
 

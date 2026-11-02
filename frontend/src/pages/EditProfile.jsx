@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
-import { useAuth } from "../context/AuthContext";
-import { updateMyProfile } from "../api/users";
+import { useAuth } from "../hooks/useAuth";
+import {
+  createMyDetailProfile,
+  getMyDetailProfile,
+  updateMyDetailProfile,
+  updateMyProfile,
+} from "../api/users";
 
 import "./EditProfile.css";
 
@@ -14,8 +19,34 @@ function EditProfile() {
 
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [preferredRadius, setPreferredRadius] = useState("5");
+  const [preferredPlayTime, setPreferredPlayTime] = useState("");
+  const [profileExists, setProfileExists] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    getMyDetailProfile()
+      .then((profile) => {
+        if (!active || !profile) return;
+        setProfileExists(true);
+        setUsername(profile.username || "");
+        setBio(profile.bio || "");
+        setPreferredRadius(String(profile.preferred_radius ?? 5));
+        setPreferredPlayTime(profile.preferred_play_time || "");
+      })
+      .catch(() => {
+        if (active) setError("Unable to load profile details.");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -32,6 +63,16 @@ function EditProfile() {
       return;
     }
 
+    if (!/^[A-Za-z0-9_.-]{3,30}$/.test(username)) {
+      setError("Username must be 3 to 30 letters, numbers, dots, underscores, or hyphens.");
+      return;
+    }
+
+    if (Number(preferredRadius) < 1 || Number(preferredRadius) > 15) {
+      setError("Preferred radius must be between 1 and 15 km.");
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -41,6 +82,18 @@ function EditProfile() {
       });
 
       updateAuthenticatedUser(updatedUser);
+
+      const profileData = {
+        username: username.trim(),
+        bio: bio.trim() || null,
+        preferred_radius: Number(preferredRadius),
+        preferred_play_time: preferredPlayTime.trim() || null,
+      };
+      if (profileExists) {
+        await updateMyDetailProfile(profileData);
+      } else {
+        await createMyDetailProfile(profileData);
+      }
 
       navigate("/profile");
     } catch (err) {
@@ -230,6 +283,53 @@ function EditProfile() {
                 <span className="edit-profile-help">
                   Use 10 to 15 characters for your phone number.
                 </span>
+              </div>
+
+              <div className="edit-profile-field">
+                <label htmlFor="username">Username</label>
+                <input
+                  id="username"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  maxLength={30}
+                  disabled={saving}
+                  required
+                />
+              </div>
+
+              <div className="edit-profile-field">
+                <label htmlFor="bio">Bio</label>
+                <textarea
+                  id="bio"
+                  value={bio}
+                  onChange={(event) => setBio(event.target.value)}
+                  maxLength={500}
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="edit-profile-field">
+                <label htmlFor="preferredRadius">Preferred radius (km)</label>
+                <input
+                  id="preferredRadius"
+                  type="number"
+                  min="1"
+                  max="15"
+                  value={preferredRadius}
+                  onChange={(event) => setPreferredRadius(event.target.value)}
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="edit-profile-field">
+                <label htmlFor="preferredPlayTime">Preferred play time</label>
+                <input
+                  id="preferredPlayTime"
+                  value={preferredPlayTime}
+                  onChange={(event) => setPreferredPlayTime(event.target.value)}
+                  maxLength={50}
+                  disabled={saving}
+                />
               </div>
 
 
