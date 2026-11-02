@@ -33,7 +33,13 @@ export const updateActivity = async (activityId, activityData) => {
 
 // Delete activity
 export const deleteActivity = async (activityId) => {
-  await api.delete(`/activities/${activityId}`);
+  const response = await api.delete(`/activities/${activityId}`);
+  return response.data;
+};
+
+export const cancelActivity = async (activityId) => {
+  const response = await api.post(`/activities/${activityId}/cancel`);
+  return response.data;
 };
 
 // Get nearby activities

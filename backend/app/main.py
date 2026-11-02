@@ -1,4 +1,5 @@
 from app.database import Base, engine
+from app.models import User, Activity, Participant, UserProfile
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
